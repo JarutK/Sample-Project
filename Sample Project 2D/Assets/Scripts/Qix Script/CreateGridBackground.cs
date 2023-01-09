@@ -2,13 +2,16 @@ using UnityEngine;
 using System.Collections;
 
 [RequireComponent(typeof(MeshRenderer)), RequireComponent(typeof(MeshFilter))]
-public class CreateGridBackground : MonoBehaviour {
+public class CreateGridBackground : MonoBehaviour
+{
+    public float x;
+    public float y;
 
     void Start()
     {
         GetComponent<MeshFilter>().mesh = CreatePlaneMesh();
     }
-    
+
     Mesh CreatePlaneMesh()
     {
         Mesh mesh = new Mesh();
@@ -17,12 +20,12 @@ public class CreateGridBackground : MonoBehaviour {
         //plane shape
         Vector3[] vertices = new Vector3[]
         {
-            new Vector3( 1,  1, z),
-            new Vector3( 1, -1, z),
-            new Vector3(-1,  1, z),
-            new Vector3(-1, -1, z),
+            new Vector3( x,  y, z),
+            new Vector3( x, -y, z),
+            new Vector3(-x,  y, z),
+            new Vector3(-x, -y, z),
         };
-    
+
         Vector2[] uv = new Vector2[]
         {
             new Vector2(1, 1),
@@ -30,24 +33,24 @@ public class CreateGridBackground : MonoBehaviour {
             new Vector2(0, 1),
             new Vector2(0, 0),
         };
-    
+
         int[] triangles = new int[]
         {
             0, 1, 2,
             2, 1, 3,
         };
-    
-        mesh.vertices = vertices;   
+
+        mesh.vertices = vertices;
         mesh.uv = uv;
         mesh.triangles = triangles;
-    
+
         mesh.RecalculateNormals();
-    
+
         return mesh;
     }
-    
+
     public float speed;
-    
+
     void Update()
     {
         Mesh mesh = GetComponent<MeshFilter>().mesh;

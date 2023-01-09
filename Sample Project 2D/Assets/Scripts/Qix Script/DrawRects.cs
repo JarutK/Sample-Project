@@ -71,26 +71,26 @@ public class DrawRects : MonoBehaviour
 
         Rect rect;
 
-        for (int ii = 0; ii < sourceRects.Count; ii++)
+        for (int i = 0; i < sourceRects.Count; i++)
         {
-            rect = sourceRects[ii];
+            rect = sourceRects[i];
 
-            vertices[verticesOffset + ii * 4 + 0] = new Vector3(rect.xMax, rect.yMax, z);
-            vertices[verticesOffset + ii * 4 + 1] = new Vector3(rect.xMax, rect.yMin, z);
-            vertices[verticesOffset + ii * 4 + 2] = new Vector3(rect.xMin, rect.yMax, z);
-            vertices[verticesOffset + ii * 4 + 3] = new Vector3(rect.xMin, rect.yMin, z);
+            vertices[verticesOffset + i * 4 + 0] = new Vector3(rect.xMax, rect.yMax, z);
+            vertices[verticesOffset + i * 4 + 1] = new Vector3(rect.xMax, rect.yMin, z);
+            vertices[verticesOffset + i * 4 + 2] = new Vector3(rect.xMin, rect.yMax, z);
+            vertices[verticesOffset + i * 4 + 3] = new Vector3(rect.xMin, rect.yMin, z);
 
-            uv[uvOffset + ii * 4 + 0] = new Vector2(1, 1);
-            uv[uvOffset + ii * 4 + 1] = new Vector2(1, 0);
-            uv[uvOffset + ii * 4 + 2] = new Vector2(0, 1);
-            uv[uvOffset + ii * 4 + 3] = new Vector2(0, 0);
+            uv[uvOffset + i * 4 + 0] = new Vector2((rect.xMax + 1) / 2, (rect.yMax + 1) / 2);
+            uv[uvOffset + i * 4 + 1] = new Vector2((rect.xMax + 1) / 2, 0);
+            uv[uvOffset + i * 4 + 2] = new Vector2(0, (rect.yMax + 1) / 2);
+            uv[uvOffset + i * 4 + 3] = new Vector2(0, 0);
 
-            triangles[triangleOffset + ii * 6 + 0] = (verticesOffset + 4 * ii + 0);
-            triangles[triangleOffset + ii * 6 + 1] = (verticesOffset + 4 * ii + 1);
-            triangles[triangleOffset + ii * 6 + 2] = (verticesOffset + 4 * ii + 2);
-            triangles[triangleOffset + ii * 6 + 3] = (verticesOffset + 4 * ii + 2);
-            triangles[triangleOffset + ii * 6 + 4] = (verticesOffset + 4 * ii + 1);
-            triangles[triangleOffset + ii * 6 + 5] = (verticesOffset + 4 * ii + 3);
+            triangles[triangleOffset + i * 6 + 0] = (verticesOffset + 4 * i + 0);
+            triangles[triangleOffset + i * 6 + 1] = (verticesOffset + 4 * i + 1);
+            triangles[triangleOffset + i * 6 + 2] = (verticesOffset + 4 * i + 2);
+            triangles[triangleOffset + i * 6 + 3] = (verticesOffset + 4 * i + 2);
+            triangles[triangleOffset + i * 6 + 4] = (verticesOffset + 4 * i + 1);
+            triangles[triangleOffset + i * 6 + 5] = (verticesOffset + 4 * i + 3);
 
             score += (rect.width * rect.height);
         }

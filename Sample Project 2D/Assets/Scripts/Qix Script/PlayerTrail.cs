@@ -3,17 +3,17 @@ using UnityEngine;
 public class PlayerTrail : MonoBehaviour
 {
 
-    public PlayerController player;
+    public PlayerMovement player;
     // Use this for initialization
     void Start()
     {
-        player = GameObject.Find("Player").GetComponent<PlayerController>();
+        player = GameObject.Find("Player").GetComponent<PlayerMovement>();
     }
 
     // Update is called once per frame
     void Update()
     {
         var lines = player.GetDrawingLinesInclLive().ToArray();
-        GetComponent<MeshFilter>().mesh = DynamicLines.GetMesh(lines, 0.1f);
+        GetComponent<MeshFilter>().mesh = DynamicLines.GetMesh(lines, 0.01f);
     }
 }

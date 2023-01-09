@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Rendering;
 
 enum PlayerState
 {
@@ -14,7 +15,6 @@ public class PlayerMovement : MonoBehaviour
     public List<Line> lines { get; private set; }
     Line currentLine;
     PlayerState state;
-    LineRenderer lineRenderer;
 
     List<Vector3> drawingVector3s;
     List<Line> drawingLines;
@@ -29,8 +29,6 @@ public class PlayerMovement : MonoBehaviour
 
     float spiraldis = 0.03f;
 
-    float startTime;
-
     float inputX;
     float inputY;
 
@@ -38,6 +36,7 @@ public class PlayerMovement : MonoBehaviour
     {
         lines = new List<Line>();
 
+        //Wall Line
         lines.Add(new Line(new Vector3(1, 1, 0), new Vector3(1, -1, 0)));
         lines.Add(new Line(new Vector3(1, -1, 0), new Vector3(-1, -1, 0)));
         lines.Add(new Line(new Vector3(-1, -1, 0), new Vector3(-1, 1, 0)));
@@ -56,11 +55,10 @@ public class PlayerMovement : MonoBehaviour
         transform.position = (currentLine.start * 0.5f + currentLine.end * 0.5f);
         state = PlayerState.OnWall;
 
-        lineRenderer = GetComponent<LineRenderer>() as LineRenderer;
-
         drawingVector3s = new List<Vector3>();
         drawingLines = new List<Line>();
 
+        //Draw Wall Line
         DrawLines.SetLines(lines);
     }
 
@@ -77,6 +75,7 @@ public class PlayerMovement : MonoBehaviour
         float speed = speedFact * Time.deltaTime;
         float desSign;
 
+        //Calculate Target Position to move
         if (Mathf.Max(Mathf.Abs(inputX), Mathf.Abs(inputY)) < 0.3f)
         {
             movement = Vector3.zero;
@@ -98,15 +97,17 @@ public class PlayerMovement : MonoBehaviour
             }
         }
 
+        //Contain Target Position
         Vector3 newPos = transform.position + movement;
-
-        string s = string.Format("{0} = {1} + {2}: ", newPos, transform.position, movement);
 
         if (state == PlayerState.OnWall)
         {
+            //Check player on the solid line from target position
             if (currentLine.ContainsBound(newPos))
             {
+                //Move player
                 transform.position = newPos;
+                //transform.Translate(inputX * speed, inputY * speed, 0);
                 handled = true;
             }
             else if (currentLine.ContainsUnbound(newPos) && (!Input.GetButton("Fire1") || !ValidToMoveTo(newPos)))
@@ -119,7 +120,6 @@ public class PlayerMovement : MonoBehaviour
                 {
                     transform.position = currentLine.end;
                 }
-
                 handled = true;
             }
             else
@@ -153,7 +153,26 @@ public class PlayerMovement : MonoBehaviour
         {
             if (movingx || movingy)
             {
-                if (!ValidToMoveTo(newPos))
+                //To Check player is crossing the drawing line
+                bool crossing = false;
+
+                foreach (Line crossLine in drawingLines)
+                {
+                    if (LineIntersectsLine(crossLine.start,
+                                           crossLine.end,
+                                           transform.position,
+                                           transform.position + movement.normalized * spiraldis))
+                    {
+                        crossing = true;
+                        break;
+                    }
+                }
+
+                if (crossing)
+                {
+                    // can't move
+                }
+                else if (!ValidToMoveTo(newPos))
                 {
                     if (InGrid(newPos))
                     {
@@ -259,11 +278,13 @@ public class PlayerMovement : MonoBehaviour
         yVector3s.Sort();
     }
 
+    //Check player can move to target position?
     public static bool ValidToMoveTo(Vector3 newPos)
     {
         return InGrid(newPos) && !DrawRects.InRects(newPos);
     }
 
+    //Check Player is moving in gridbackground
     public static bool InGrid(Vector3 newPos)
     {
         return ((newPos.x >= -1.0f) &&
@@ -324,47 +345,10 @@ public class PlayerMovement : MonoBehaviour
         bool baddyIn1;
         bool baddyIn2;
 
-        Qix theQix = GameObject.Find("TheQix").GetComponent<Qix>();
+        area1 = FloodFill(w, h, vsides, hsides, drawRects1, fillx1, filly1, out baddyIn1);
+        area2 = FloodFill(w, h, vsides, hsides, drawRects2, fillx2, filly2, out baddyIn2);
 
-        area1 = FloodFill(w, h, vsides, hsides, drawRects1, fillx1, filly1, out baddyIn1, theQix);
-        area2 = FloodFill(w, h, vsides, hsides, drawRects2, fillx2, filly2, out baddyIn2, theQix);
-
-        bool dump = false;
-
-        if (!baddyIn1 && !baddyIn2)
-        {
-            MWRDebug.Log("In neither", MWRDebug.DebugLevels.INFLOOP1);
-            dump = true;
-        }
-        else if (baddyIn1 && baddyIn2)
-        {
-            MWRDebug.Log("In both", MWRDebug.DebugLevels.INFLOOP1);
-            dump = true;
-        }
-
-        if (dump)
-        {
-            string s = "Qix at " + theQix.position + "\r\n";
-
-            s += "Rects1...(" + baddyIn1 + ")\r\n";
-
-            foreach (Rect r in drawRects1)
-            {
-                s += r;
-                s += (r.Contains(theQix.position));
-            }
-
-            s += "Rects2...(" + baddyIn2 + ")\r\n";
-
-            foreach (Rect r in drawRects2)
-            {
-                s += r;
-                s += (r.Contains(theQix.position));
-            }
-
-            MWRDebug.DumpToTraceFile(s);
-        }
-
+        //check zone to draw rect
         if (baddyIn2)
         {
             AddRectsToDeadZone(drawRects1);
@@ -428,8 +412,7 @@ public class PlayerMovement : MonoBehaviour
                             List<Rect> drawRects,
                             int fillx1,
                             int filly1,
-                            out bool containsBaddy,
-                            Qix theQix)
+                            out bool containsBaddy)
     {
         float nArea = 0.0f;
         Queue<IntTuple> queue = new Queue<IntTuple>();
@@ -447,7 +430,7 @@ public class PlayerMovement : MonoBehaviour
                 Rect rect = new Rect(xVector3s[tuple.x], yVector3s[tuple.y], xVector3s[tuple.x + 1] - xVector3s[tuple.x], yVector3s[tuple.y + 1] - yVector3s[tuple.y]);
                 drawRects.Add(rect);
 
-                if (!containsBaddy && rect.Contains(theQix.position))
+                if (!containsBaddy)
                 {
                     containsBaddy = true;
                 }
@@ -522,7 +505,7 @@ public class PlayerMovement : MonoBehaviour
 
                 for (int ii = xl; ii < xr; ii++)
                 {
-                    JustLog("Adding hside [" + ii + "," + (ys - 1) + "]");
+
                     hsides[ii, ys - 1] = true;
                 }
             }
@@ -533,7 +516,6 @@ public class PlayerMovement : MonoBehaviour
 
                 for (int ii = yb; ii < yt; ii++)
                 {
-                    //JustLog("Adding vside [" + (xs - 1) + "," + ii + "]");
                     vsides[xs - 1, ii] = true;
                 }
             }
@@ -577,11 +559,7 @@ public class PlayerMovement : MonoBehaviour
         return true;
     }
 
-    public bool LinesIntersect(Line line1, Line line2)
-    {
-        return LineIntersectsLine(line1.start, line1.end, line2.start, line2.end);
-    }
-
+    //Drawing Trail
     public List<Line> GetDrawingLinesInclLive()
     {
         List<Line> rcList = new List<Line>(drawingLines);
@@ -592,52 +570,5 @@ public class PlayerMovement : MonoBehaviour
         }
 
         return rcList;
-    }
-
-    public void KillIfDrawingLineIntersects(Line testlin)
-    {
-        if (DrawingLineIntersects(testlin))
-        {
-            Dead();
-        }
-    }
-
-    public void KillIfPlayerInLine(Line testline)
-    {
-        if (testline.ContainsBound(transform.position))
-        {
-            Dead();
-        }
-    }
-
-    public bool DrawingLineIntersects(Line testLine)
-    {
-        bool rc = false;
-
-        if (drawingVector3s.Count > 0)
-        {
-            rc = LinesIntersect(testLine, new Line(drawingVector3s[drawingVector3s.Count - 1], transform.position));
-        }
-
-        foreach (Line ll in drawingLines)
-        {
-            if (LinesIntersect(ll, testLine))
-            {
-                rc = true;
-            }
-
-            if (rc)
-            {
-                break;
-            }
-        }
-
-        return rc;
-    }
-
-    public void Dead()
-    {
-        MWRDebug.Log("KILLED BY QIX", MWRDebug.DebugLevels.ALWAYS);
-        ScoreManager.Dead = true;
     }
 }
