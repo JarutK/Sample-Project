@@ -6,6 +6,7 @@ public class PlayerController : MonoBehaviour
     float horizontal;
     float vertical;
     Rigidbody rigidbody;
+    string key;
 
     // Start is called before the first frame update
     void Start()
@@ -18,6 +19,17 @@ public class PlayerController : MonoBehaviour
     {
         horizontal = Input.GetAxisRaw("Horizontal");
         vertical = Input.GetAxisRaw("Vertical");
-        rigidbody.velocity = new Vector3(horizontal * Speed, vertical * Speed, 0);
+        //rigidbody.velocity = new Vector3(horizontal * Speed, vertical * Speed, 0);
+
+        
+    }
+
+    void GetInput()
+    {
+
+        switch (key)
+        {
+
+        }
     }
 }
