@@ -15,7 +15,7 @@ public class QuadCreator : MonoBehaviour
 
     private void Update()
     {
-        
+
     }
 
     void GenerateQuad()
@@ -52,7 +52,7 @@ public class QuadCreator : MonoBehaviour
     {
         float totalX = 0f;
         float totalY = 0f;
-        for(int i = 0; i < vertices.Length ; i++)
+        for (int i = 0; i < vertices.Length; i++)
         {
             totalX += vertices[i].x;
             totalY += vertices[i].y;
@@ -66,30 +66,30 @@ public class QuadCreator : MonoBehaviour
     {
         Vector2 center = MidPosition();
         Vector2[] tempPos = new Vector2[vertices.Length];
-        for(int i = 0; i < 4 ; i++)
+        for (int i = 0; i < 4; i++)
         {
             //vertice 0
-            if(vertices[i].x <= center.x && vertices[i].y <= center.y)
+            if (vertices[i].x <= center.x && vertices[i].y <= center.y)
             {
                 tempPos[0] = vertices[i];
             }
             //vertice 1
-            if(vertices[i].x >= center.x && vertices[i].y <= center.y)
+            if (vertices[i].x >= center.x && vertices[i].y <= center.y)
             {
                 tempPos[1] = vertices[i];
             }
             //vertice 2
-            if(vertices[i].x <= center.x && vertices[i].y >= center.y)
+            if (vertices[i].x <= center.x && vertices[i].y >= center.y)
             {
                 tempPos[2] = vertices[i];
             }
             //vertice 3
-            if(vertices[i].x >= center.x && vertices[i].y >= center.y)
+            if (vertices[i].x >= center.x && vertices[i].y >= center.y)
             {
                 tempPos[3] = vertices[i];
             }
         }
-        for(int j = 0; j < vertices.Length; j++)
+        for (int j = 0; j < vertices.Length; j++)
         {
             vertices[j] = tempPos[j];
         }
@@ -107,30 +107,19 @@ public class QuadCreator : MonoBehaviour
         return uv;
     }
 
-    private void OnMouseDown()
+    public void OnChangeDir(Vector3 dir)
     {
-
-        Vector3 scale = transform.localScale;
-
-        if (Input.GetMouseButtonDown(0))
+        if (verticeIndex <= vertices.Length - 1)
         {
-            Vector3 mousePos = Input.mousePosition;
-            mousePos = Camera.main.ScreenToWorldPoint(mousePos);
-            mousePos = new Vector3(mousePos.x, mousePos.y, mousePos.z + 1);
-
-            if (verticeIndex <= vertices.Length - 1)
+            vertices[verticeIndex] = dir;
+            verticeIndex++;
+            if (verticeIndex == vertices.Length)
             {
-                vertices[verticeIndex] = mousePos;
-                verticeIndex++;
-                if (verticeIndex == vertices.Length)
-                {
-                    verticeIndex = 0;
-                    OrderPosition();
-                    GenerateQuad();
-                    
-                }
+                verticeIndex = 0;
+                OrderPosition();
+                GenerateQuad();
+
             }
         }
-
     }
 }

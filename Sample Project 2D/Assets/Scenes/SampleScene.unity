@@ -123,32 +123,15 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
---- !u!1 &14926576 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 3314507437224570447, guid: dccf29c95936b394c8634cf803f05338, type: 3}
-  m_PrefabInstance: {fileID: 3314507438735411340}
-  m_PrefabAsset: {fileID: 0}
 --- !u!114 &14926577 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 3314507437224570436, guid: dccf29c95936b394c8634cf803f05338, type: 3}
   m_PrefabInstance: {fileID: 3314507438735411340}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 14926576}
+  m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 07b12198e28428743a328f1ba508fa10, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
---- !u!114 &14926582
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 14926576}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 187e9a90497aa794f990216905390cb3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
 --- !u!1 &18035283
@@ -170,7 +153,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!114 &18035285
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -253,7 +236,7 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 18035283}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 10}
   m_LocalScale: {x: 16, y: 8, z: 1}
   m_ConstrainProportionsScale: 0
@@ -1105,6 +1088,10 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 3314507437224570436, guid: dccf29c95936b394c8634cf803f05338, type: 3}
+      propertyPath: quadCreator
+      value: 
+      objectReference: {fileID: 18035285}
     - target: {fileID: 3314507437224570440, guid: dccf29c95936b394c8634cf803f05338, type: 3}
       propertyPath: m_RootOrder
       value: 6

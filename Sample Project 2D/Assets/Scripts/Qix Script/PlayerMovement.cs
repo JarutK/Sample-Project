@@ -9,12 +9,10 @@ enum PlayerState
 
 public class PlayerMovement : MonoBehaviour
 {
-
     public float speedFact;
 
     public List<Line> lines { get; private set; }
     Line currentLine;
-    //int currentIndex;
     PlayerState state;
     LineRenderer lineRenderer;
 
@@ -33,8 +31,8 @@ public class PlayerMovement : MonoBehaviour
 
     float startTime;
 
-    float dx;
-    float dy;
+    float inputX;
+    float inputY;
 
     void Start()
     {
@@ -69,8 +67,8 @@ public class PlayerMovement : MonoBehaviour
     void Update()
     {
         // @@ Issue: too latent
-        dx = Input.GetAxis("Horizontal");
-        dy = Input.GetAxis("Vertical");
+        inputX = Input.GetAxis("Horizontal");
+        inputY = Input.GetAxis("Vertical");
 
         Vector3 movement;
         bool movingx = false;
@@ -79,28 +77,30 @@ public class PlayerMovement : MonoBehaviour
         float speed = speedFact * Time.deltaTime;
         float desSign;
 
-        if (Mathf.Max(Mathf.Abs(dx), Mathf.Abs(dy)) < 0.3f)
+        if (Mathf.Max(Mathf.Abs(inputX), Mathf.Abs(inputY)) < 0.3f)
         {
             movement = Vector3.zero;
             desSign = 0.0f;
         }
         else
         {
-            if (Mathf.Abs(dx) > Mathf.Abs(dy))
+            if (Mathf.Abs(inputX) > Mathf.Abs(inputY))
             {
-                movement = new Vector3(speed * Mathf.Sign(dx), 0.0f, 0.0f);
+                movement = new Vector3(speed * Mathf.Sign(inputX), 0.0f, 0.0f);
                 movingx = true;
-                desSign = Mathf.Sign(dx);
+                desSign = Mathf.Sign(inputX);
             }
             else
             {
-                movement = new Vector3(0.0f, speed * Mathf.Sign(dy), 0.0f);
+                movement = new Vector3(0.0f, speed * Mathf.Sign(inputY), 0.0f);
                 movingy = true;
-                desSign = Mathf.Sign(dy);
+                desSign = Mathf.Sign(inputY);
             }
         }
 
         Vector3 newPos = transform.position + movement;
+
+        string s = string.Format("{0} = {1} + {2}: ", newPos, transform.position, movement);
 
         if (state == PlayerState.OnWall)
         {
@@ -153,20 +153,6 @@ public class PlayerMovement : MonoBehaviour
         {
             if (movingx || movingy)
             {
-                bool crossing = false;
-
-                foreach (Line crossLine in drawingLines)
-                {
-                    if (LineIntersectsLine(crossLine.start,
-                                           crossLine.end,
-                                           transform.position,
-                                           transform.position + movement.normalized * spiraldis))
-                    {
-                        crossing = true;
-                        break;
-                    }
-                }
-
                 if (!ValidToMoveTo(newPos))
                 {
                     if (InGrid(newPos))
@@ -174,7 +160,7 @@ public class PlayerMovement : MonoBehaviour
                         if (drawingx)
                         {
                             // Moving horizontally.  
-                            if (Mathf.Sign(dx) > 0.0f)
+                            if (Mathf.Sign(inputX) > 0.0f)
                             {
                                 newPos.x = DrawRects.hitRect.xMin;
                             }
@@ -186,7 +172,7 @@ public class PlayerMovement : MonoBehaviour
                         else
                         {
                             // Moving vertically.  
-                            if (Mathf.Sign(dy) > 0.0f)
+                            if (Mathf.Sign(inputY) > 0.0f)
                             {
                                 newPos.y = DrawRects.hitRect.yMin;
                             }
@@ -289,6 +275,8 @@ public class PlayerMovement : MonoBehaviour
     /// <summary>
     /// Snaps a Vecto3 back to being within the main grid.
     /// </summary>
+    /// <param name="newPos">Attempted position</param>
+    /// <returns></returns>
     Vector3 SnapToGrid(Vector3 newPos)
     {
         Vector3 snap;
@@ -307,16 +295,8 @@ public class PlayerMovement : MonoBehaviour
         return snap;
     }
 
-    void LogTimeDelta(string s)
-    {
-        MWRDebug.Log("Time " + (Time.realtimeSinceStartup - startTime) + ": " + s + "++++++++++++++++++++++++++");
-    }
-
     void FillDrawnArea()
     {
-        SetLogStartTime();
-        LogTimeDelta("Start");
-
         // Get dimensions
         int w = xVector3s.Count;
         int h = yVector3s.Count;
@@ -349,87 +329,55 @@ public class PlayerMovement : MonoBehaviour
         area1 = FloodFill(w, h, vsides, hsides, drawRects1, fillx1, filly1, out baddyIn1, theQix);
         area2 = FloodFill(w, h, vsides, hsides, drawRects2, fillx2, filly2, out baddyIn2, theQix);
 
-        // Fill the appropriate area.
-        // @@ Issue: we just do the smallest here - it should be the one without the baddy
+        bool dump = false;
 
-        if (false)
+        if (!baddyIn1 && !baddyIn2)
         {
-            if (area1 < area2)
+            MWRDebug.Log("In neither", MWRDebug.DebugLevels.INFLOOP1);
+            dump = true;
+        }
+        else if (baddyIn1 && baddyIn2)
+        {
+            MWRDebug.Log("In both", MWRDebug.DebugLevels.INFLOOP1);
+            dump = true;
+        }
+
+        if (dump)
+        {
+            string s = "Qix at " + theQix.position + "\r\n";
+
+            s += "Rects1...(" + baddyIn1 + ")\r\n";
+
+            foreach (Rect r in drawRects1)
             {
-                DrawRects.AddRects(drawRects1);
+                s += r;
+                s += (r.Contains(theQix.position));
             }
-            else
+
+            s += "Rects2...(" + baddyIn2 + ")\r\n";
+
+            foreach (Rect r in drawRects2)
             {
-                DrawRects.AddRects(drawRects2);
+                s += r;
+                s += (r.Contains(theQix.position));
             }
+
+            MWRDebug.DumpToTraceFile(s);
+        }
+
+        if (baddyIn2)
+        {
+            AddRectsToDeadZone(drawRects1);
         }
         else
         {
-            bool dump = false;
-
-            if (!baddyIn1 && !baddyIn2)
-            {
-                MWRDebug.Log("In neither", MWRDebug.DebugLevels.INFLOOP1);
-                dump = true;
-            }
-            else if (baddyIn1 && baddyIn2)
-            {
-                MWRDebug.Log("In both", MWRDebug.DebugLevels.INFLOOP1);
-                dump = true;
-            }
-
-            if (dump)
-            {
-                string s = "Qix at " + theQix.position + "\r\n";
-
-                s += "Rects1...(" + baddyIn1 + ")\r\n";
-
-                foreach (Rect r in drawRects1)
-                {
-                    s += r;
-                    s += (r.Contains(theQix.position));
-                }
-
-                s += "Rects2...(" + baddyIn2 + ")\r\n";
-
-                foreach (Rect r in drawRects2)
-                {
-                    s += r;
-                    s += (r.Contains(theQix.position));
-                }
-
-                MWRDebug.DumpToTraceFile(s);
-            }
-
-            if (baddyIn2)
-            {
-                AddRectsToDeadZone(drawRects1);
-            }
-            else
-            {
-                AddRectsToDeadZone(drawRects2);
-            }
+            AddRectsToDeadZone(drawRects2);
         }
-
-        LogTimeDelta("End");
     }
 
     private static void AddRectsToDeadZone(List<Rect> drawRects1)
     {
         DrawRects.AddRects(drawRects1);
-
-        var blah = GameObject.FindGameObjectsWithTag("SpritzTag");
-
-        foreach (var rect in drawRects1)
-        {
-            for (int ii = 0; ii < blah.Length; ii++)
-            {
-                if (rect.Contains(blah[ii].transform.position))
-                {
-                    blah[ii].active = false;
-                }
-            }
-        }
     }
 
     private void ExtractFloodStartVector3s(out int fillx1, out int filly1, out int fillx2, out int filly2)
@@ -442,7 +390,7 @@ public class PlayerMovement : MonoBehaviour
         if (drawingx)
         {
             // Moving horizonally.  
-            if (Mathf.Sign(dx) > 0.0f)
+            if (Mathf.Sign(inputX) > 0.0f)
             {
                 fillx1 = ourx - 1;
             }
@@ -458,7 +406,7 @@ public class PlayerMovement : MonoBehaviour
         else
         {
             // Moving vertically.
-            if (Mathf.Sign(dy) > 0.0f)
+            if (Mathf.Sign(inputY) > 0.0f)
             {
                 filly1 = oury - 1;
             }
@@ -509,28 +457,28 @@ public class PlayerMovement : MonoBehaviour
                 if ((tuple.x > 0) && (!vsides[tuple.x - 1, tuple.y]))
                 {
                     // Can move left
-                    
+
                     queue.Enqueue(new IntTuple(tuple.x - 1, tuple.y));
                 }
 
                 if ((tuple.x < (w - 2)) && (!vsides[tuple.x, tuple.y]))
                 {
                     // Can move right
-                    
+
                     queue.Enqueue(new IntTuple(tuple.x + 1, tuple.y));
                 }
 
                 if ((tuple.y > 0) && (!hsides[tuple.x, tuple.y - 1]))
                 {
                     // Can move down
-                    
+
                     queue.Enqueue(new IntTuple(tuple.x, tuple.y - 1));
                 }
 
                 if ((tuple.y < (h - 2)) && (!hsides[tuple.x, tuple.y]))
                 {
                     // Can move up
-                    
+
                     queue.Enqueue(new IntTuple(tuple.x, tuple.y + 1));
                 }
             }
@@ -574,7 +522,7 @@ public class PlayerMovement : MonoBehaviour
 
                 for (int ii = xl; ii < xr; ii++)
                 {
-                   
+                    JustLog("Adding hside [" + ii + "," + (ys - 1) + "]");
                     hsides[ii, ys - 1] = true;
                 }
             }
@@ -590,11 +538,6 @@ public class PlayerMovement : MonoBehaviour
                 }
             }
         }
-    }
-
-    private void SetLogStartTime()
-    {
-        startTime = Time.realtimeSinceStartup;
     }
 
     private static Vector3 MaybeAddVector3(List<float> xVector3s, List<float> yVector3s, Vector3 Vector3)
@@ -632,11 +575,6 @@ public class PlayerMovement : MonoBehaviour
         }
 
         return true;
-    }
-
-    public bool LinesIntersect(Line line1, Vector3 l2p1, Vector3 l2p2)
-    {
-        return LineIntersectsLine(line1.start, line1.end, l2p1, l2p2);
     }
 
     public bool LinesIntersect(Line line1, Line line2)

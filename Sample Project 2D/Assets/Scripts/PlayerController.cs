@@ -6,18 +6,17 @@ public class PlayerController : MonoBehaviour
     [SerializeField] float Speed;
     float horizontal;
     float vertical;
-    Rigidbody rigidbody;
+    Rigidbody playerRgbd;
 
     List<Vector3> drawingVector3s;
     List<Line> drawingLines;
 
-    List<float> xVector3s;
-    List<float> yVector3s;
+    [SerializeField] QuadCreator quadCreator;
 
     // Start is called before the first frame update
     void Start()
     {
-        rigidbody = GetComponent<Rigidbody>();
+        playerRgbd = GetComponent<Rigidbody>();
         drawingVector3s = new List<Vector3>();
         drawingLines = new List<Line>();
     }
@@ -28,7 +27,12 @@ public class PlayerController : MonoBehaviour
         horizontal = Input.GetAxisRaw("Horizontal");
         vertical = Input.GetAxisRaw("Vertical");
 
-        rigidbody.velocity = new Vector3(horizontal * Speed, vertical * Speed, 0);
+        playerRgbd.velocity = new Vector3(horizontal * Speed, vertical * Speed, 0);
+
+        if(Input.GetKeyDown("w") || Input.GetKeyDown("a") || Input.GetKeyDown("s") || Input.GetKeyDown("d"))
+        {
+            quadCreator.OnChangeDir(transform.position);
+        }
 
         PushDrawVector3(transform.position);
     }
@@ -41,7 +45,7 @@ public class PlayerController : MonoBehaviour
         {
             rcList.Add(new Line(drawingVector3s[drawingVector3s.Count - 1], transform.position));
         }
-
+        Debug.Log(drawingVector3s);
         return rcList;
     }
 
